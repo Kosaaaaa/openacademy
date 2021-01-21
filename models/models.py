@@ -21,6 +21,19 @@ class Course(models.Model):
         'course_id',
         string="Sessions")
 
+    _sql_constraints = [
+        ('name_description_check',
+         'CHECK(name != description)',
+         _("The title of the course should not be the description.")
+         ),
+
+        (
+            'name_unique',
+            'UNIQUE(name)',
+            _("The course title must be unique.")
+        ),
+    ]
+
 
 class Session(models.Model):
     """Session Model"""

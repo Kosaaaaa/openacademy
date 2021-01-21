@@ -101,10 +101,11 @@
             <field name="name">session.tree</field>
             <field name="model">openacademy.session</field>
             <field name="arch" type="xml">
-                <tree string="Session Tree">
+                <tree string="Session Tree" decoration-info="duration&lt;5" decoration-danger="duration&gt;15">
                     <field name="name"/>
                     <field name="start_date"/>
                     <field name="end_date"/>
+                    <field name="duration" invisible="1"/>
                     <field name="course_id">
                         <field name="name"/>
                     </field>

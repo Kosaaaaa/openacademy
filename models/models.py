@@ -1,12 +1,10 @@
 # -*- coding: utf-8 -*-
-"""Openacademy Database models"""
 from datetime import timedelta
 from odoo import models, fields, api, _
 from odoo.exceptions import ValidationError
 
 
 class Course(models.Model):
-    """Course Model"""
     _name = 'openacademy.course'
     _description = 'OpenAcademy Course'
 
@@ -21,6 +19,7 @@ class Course(models.Model):
         'openacademy.session',
         'course_id',
         string="Sessions")
+    session_count = fields.Integer(compute='_compute_session_count')
 
     def copy(self, default=None):
         default = dict(default or {})
@@ -37,6 +36,11 @@ class Course(models.Model):
         default['name'] = new_name
         return super(Course, self).copy(default)
 
+    @api.depends('session_ids')
+    def _compute_session_count(self):
+        for line in self:
+            line.session_count = len(line.session_ids)
+
     _sql_constraints = [
         ('name_description_check',
          'CHECK(name != description)',
@@ -52,7 +56,6 @@ class Course(models.Model):
 
 
 class Session(models.Model):
-    """Session Model"""
     _name = 'openacademy.session'
     _description = 'OpenAcademy Sessions'
 
@@ -65,8 +68,18 @@ class Session(models.Model):
     course_id = fields.Many2one('openacademy.course', ondelete='cascade',
                                 string="Course", required=True)
     attendee_ids = fields.Many2many('res.partner', string="Attendees")
+    attendees_count = fields.Integer(
+        compute='_get_attendees_count', store=True)
     taken_seats = fields.Float(compute='_compute_taken_seats')
     active = fields.Boolean(default=True)
+    confirmed = fields.Boolean(compute='_compute_confirmed')
+
+    @staticmethod
+    def _warning(title, message):
+        return {'warning': {
+            'title': _(title),
+            'message': _(message),
+        }}
 
     @api.depends('start_date', 'duration')
     def _compute_end_date(self):
@@ -88,24 +101,32 @@ class Session(models.Model):
     @api.onchange('seats', 'attendee_ids')
     def _onchange_verify_valid_seats(self):
         if self.seats < 0:
-            return {
-                'warning': {
-                    'title': _("Incorrect \"seats\" value"),
-                    'message': _("The number of available seats may not be negative."),
-                }}
+            return self._warning(
+                "Incorrect \"seats\" value",
+                "The number of available seats may not be negative.")
         elif self.seats < len(self.attendee_ids):
-            return {
-                'warning': {
-                    'title': _("Too many attendees"),
-                    'message': _("Increase number of seats({}) or remove excess attendees({})").format(
-                        self.seats,
-                        len(self.attendee_ids)),
-                }}
+            return self._warning(
+                "Too many attendees", "Increase number of seats({}) or remove excess attendees({})".format(
+                    self.seats, len(
+                        self.attendee_ids)))
 
     @api.constrains('instructor_id', 'attendee_ids')
     def _check_instructor_not_in_attendees(self):
         for line in self:
             if line.instructor_id and (
                     line.instructor_id in line.attendee_ids):
-                raise ValidationError(
-                    _("A session's intructor can't be an attendee."))
+                raise ValidationError(_("A session's intructor can't be an attendee."))
+
+    @api.depends('seats', 'attendee_ids')
+    def _compute_confirmed(self):
+        # If over 50% of available seats is taken set session as confirmed
+        for line in self:
+            if line.taken_seats >= 50.0:
+                line.confirmed = True
+            else:
+                line.confirmed = False
+
+    @api.depends('attendee_ids')
+    def _get_attendees_count(self):
+        for session in self:
+            session.attendees_count = len(session.attendee_ids)

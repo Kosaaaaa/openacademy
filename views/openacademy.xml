@@ -80,12 +80,14 @@
                             <field name="course_id"/>
                             <field name="name"/>
                             <field name="instructor_id"/>
+                            <field name="active"/>
                         </group>
                         <group string="Schedule">
                             <field name="start_date"/>
                             <field name="duration"/>
                             <field name="end_date"/>
                             <field name="seats"/>
+                            <field name="taken_seats" widget="progressbar"/>
                         </group>
                         <group string="Attendees">
                             <field name="attendee_ids" nolabel="1"/>
@@ -106,6 +108,7 @@
                     <field name="course_id">
                         <field name="name"/>
                     </field>
+                    <field name="taken_seats" widget="progressbar"/>
                 </tree>
             </field>
         </record>
@@ -118,7 +121,6 @@
 
         <menuitem id="session_menu" name="Sessions" parent="openacademy_menu" action="session_list_action"
                   groups="group_openacademy_manager"/>
-
 
     </data>
 </odoo>

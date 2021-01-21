@@ -84,9 +84,10 @@
                         <group string="Schedule">
                             <field name="start_date"/>
                             <field name="duration"/>
+                            <field name="end_date"/>
                             <field name="seats"/>
                         </group>
-                        <group string="Attendees" for="">
+                        <group string="Attendees">
                             <field name="attendee_ids" nolabel="1"/>
                         </group>
                     </sheet>
@@ -100,7 +101,11 @@
             <field name="arch" type="xml">
                 <tree string="Session Tree">
                     <field name="name"/>
-                    <field name="course_id"/>
+                    <field name="start_date"/>
+                    <field name="end_date"/>
+                    <field name="course_id">
+                        <field name="name"/>
+                    </field>
                 </tree>
             </field>
         </record>

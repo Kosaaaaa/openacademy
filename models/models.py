@@ -22,6 +22,21 @@ class Course(models.Model):
         'course_id',
         string="Sessions")
 
+    def copy(self, default=None):
+        default = dict(default or {})
+
+        copy_count = self.search_count(
+            [('name', '=like', "Copy of {}".format(self.name))]
+        )
+
+        if not copy_count:
+            new_name = "Copy of {}".format(self.name)
+        else:
+            new_name = "Copy of {} ({})".format(self.name, copy_count)
+
+        default['name'] = new_name
+        return super(Course, self).copy(default)
+
     _sql_constraints = [
         ('name_description_check',
          'CHECK(name != description)',

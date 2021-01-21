@@ -2,6 +2,7 @@
 """Openacademy Database models"""
 from datetime import timedelta
 from odoo import models, fields, api, _
+from odoo.exceptions import ValidationError
 
 
 class Course(models.Model):
@@ -86,3 +87,10 @@ class Session(models.Model):
                         len(self.attendee_ids)),
                 }}
 
+    @api.constrains('instructor_id', 'attendee_ids')
+    def _check_instructor_not_in_attendees(self):
+        for line in self:
+            if line.instructor_id and (
+                    line.instructor_id in line.attendee_ids):
+                raise ValidationError(
+                    _("A session's intructor can't be an attendee."))
